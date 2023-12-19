@@ -1,0 +1,97 @@
+name: Deploy Snowpark Apps
+# Controls when the action will run.
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Select the target branch for deployment'
+        required: true
+        default: 'dev'
+        options:
+          - dev
+          - test
+          - release
+          - master
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.target_branch == 'dev' || inputs.target_branch == 'test' || inputs.target_branch == 'release'|| inputs.target_branch == 'master') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install black
+        run: pip install black
+
+      - name: Lint code with black
+        run: black --line-length 120 .
+
+      - name: Install SQLFLUFF
+        run: pip install sqlfluff
+
+      - name: Lint code with SqlFluff
+        run: sqlfluff lint --exclude-rules LT02,LT05 --dialect snowflake
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: lint  # Ensure lint job completes before deploying
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "TARGET_BRANCH=${{ inputs.target_branch }}" >> $GITHUB_ENV
+          else
+            echo "TARGET_BRANCH=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          fi
+
+      - name: Configure snowcli
+        env:
+          SNOWSQL_ACCOUNT: ${{ secrets[format('SNOWSQL_ACCOUNT_{0}', inputs.target_branch)] }}
+          SNOWSQL_USER: ${{ secrets[format('SNOWSQL_USER_{0}', inputs.target_branch)] }}
+          SNOWSQL_PWD: ${{ secrets[format('SNOWSQL_PWD_{0}', inputs.target_branch)] }}
+          SNOWSQL_ROLE: ${{ secrets[format('SNOWSQL_ROLE_{0}', inputs.target_branch)] }}
+          SNOWSQL_WAREHOUSE: ${{ secrets[format('SNOWSQL_WAREHOUSE_{0}', inputs.target_branch)] }}
+          SNOWSQL_DATABASE: ${{ secrets[format('SNOWSQL_DATABASE_{0}', inputs.target_branch)] }}
+          SNOWSQL_SCHEMA: ${{ secrets[format('SNOWSQL_SCHEMA_{0}', inputs.target_branch)] }}
+        run: |
+          cd $GITHUB_WORKSPACE
+          echo "[connections.main]" > config
+          echo "accountname = $SNOWSQL_ACCOUNT " >> config
+          echo "username = $SNOWSQL_USER " >> config
+          echo "password = $SNOWSQL_PWD " >> config
+          echo "rolename = $SNOWSQL_ROLE " >> config
+          echo "warehousename = $SNOWSQL_WAREHOUSE " >> config
+          echo "dbname = $SNOWSQL_DATABASE " >> config
+          echo "schemaname = $SNOWSQL_SCHEMA " >> config
+
+      - name: Deploy Snowpark apps
+        env:
+          FILES: ${{ steps.filenames.outputs.all }}
+        run: python command_center_deploy.py --root_directory=$GITHUB_WORKSPACE --files_list="$FILES"
