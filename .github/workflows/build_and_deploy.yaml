@@ -15,13 +15,12 @@ on:
           - test
           - release
           - master
+          - main
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-
-    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.target_branch == 'dev' || inputs.target_branch == 'test' || inputs.target_branch == 'release'|| inputs.target_branch == 'master') }}
-
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.target_branch == 'dev' || inputs.target_branch == 'test' || inputs.target_branch == 'release' || inputs.target_branch == 'master'|| inputs.target_branch == 'main') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -32,8 +31,12 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
-             pre-commit run --all-files
+        run: |
+          pip install -r requirements.txt
+          pip install --upgrade pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
 
       - name: Install black
         run: pip install black
