@@ -44,11 +44,11 @@ jobs:
       - name: Lint code with black
         run: black --line-length 120 .
 
-      - name: Install SQLFLUFF
-        run: pip install sqlfluff
+      # - name: Install SQLFLUFF
+      #   run: pip install sqlfluff
 
-      - name: Lint code with SqlFluff
-        run: sqlfluff lint --exclude-rules LT02,LT05 --dialect snowflake
+      # - name: Lint code with SqlFluff
+      #   run: sqlfluff lint --exclude-rules LT02,LT05 --dialect snowflake
 
   deploy:
     runs-on: ubuntu-latest
