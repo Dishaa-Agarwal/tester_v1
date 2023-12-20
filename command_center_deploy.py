@@ -11,7 +11,6 @@ functions:
         the file is a store procedure
     * deploy_changes - only deploys the modified store procedures
     * deploy_all - deploys all sql and snowpark store procedures
-    test
 """
 
 
