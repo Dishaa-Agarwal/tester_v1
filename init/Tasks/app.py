@@ -11,6 +11,7 @@ functions:
     * main - the main function of the script
 """
 
+
 from snowflake.snowpark import Session
 
 

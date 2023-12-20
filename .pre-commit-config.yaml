@@ -9,3 +9,8 @@ repos:
     rev: stable
     hooks:
       - id: black
+  # - repo: https://github.com/sqlfluff/sqlfluff
+  #   rev: stable  # Use the desired version of sqlfluff
+  #   hooks:
+  #     - id: sqlfluff-lint
+  #       args: [ '--dialect=snowflake' ]
