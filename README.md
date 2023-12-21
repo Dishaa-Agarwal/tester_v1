@@ -68,3 +68,30 @@ In the terminal run the following code by modifying the root directory:
 ```bash
 python "root_directory\path_app.py\app.py"
 ```
+## Commit Commands Information
+- Before performing any Github command ensure to install the Pre-commit library in the root directory using:
+```bash
+ pip install pre-commit
+```
+- Then run the following command
+```bash
+ pre-commit install
+```
+- In order to run the pre-commit hooks for linting we need to create a .pre-commit-config.yaml  configuration file which will contain all the pre-commit hooks.
+- Place the .pre-commit-config.yaml file in the root directory of the project.
+- Add the necessary code for each pre-commit hook in the .pre-commit-config.yaml as save it.
+- Now that we have all the necessary files needed for linting we will now simply commit our files to Github repository.
+- Run the following commands in the terminal as shown below:
+```bash
+ git status
+ git add .
+ git commit -m "statements"
+```
+- As soon as we commit the code the Pre-commit hooks will check for errors according to PEP8 format in the whole repository and if there are any errors it will reformatt the files.
+- After linting is completed we need to again commit our files using the same commands and push the code into Github repository:
+```bash
+ git status
+ git add .
+ git commit -m "statements"
+ git push origin <branch-name>
+```
